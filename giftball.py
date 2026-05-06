@@ -1,5 +1,5 @@
-from enum import Enum, auto
 from abc import ABC, abstractmethod
+import random
 
 class State(ABC):
 
@@ -40,7 +40,11 @@ class OneTokenState(State):
 		machine.set_state(machine.no_token_state)
 
 	def turn_crank(self, machine):
-		ball_machine.set_state(machine.ball_sold_state)
+		if random.random() < 0.20 and machine.ball_count() >= 2:
+			print("Coup de chance !")
+			machine.set_state(machine.surprise_win)
+		else:
+			machine.set_state(machine.ball_sold_state)
 		machine.dispense()
 
 	def dispense(self, machine):
@@ -57,7 +61,6 @@ class BallSoldState(State):
 		pass
 
 	def dispense(self, machine):
-		print("Voici une boule surprise !")
 		machine.release_ball()
 		if machine.ball_count() == 0:
 			print("Plus de boules.")
@@ -78,12 +81,31 @@ class NoBallsState(State):
 	def dispense(self, machine):
 		pass
 
+class SurpriseWin(State):
+	def insert_token(self, machine):
+		pass
+	
+	def eject_token(self, machine):
+		pass
+
+	def turn_crank(self, machine):
+		pass
+
+	def dispense(self, machine):
+		machine.release_ball()
+		if machine.ball_count() == 0:
+			print("Plus de boules.")
+			machine
+		else:
+			machine.set_state(machine.no_token_state)
+
 class GiftBall:
 	def __init__(self, ball_count):
 		self.no_token_state = NoTokenState()
 		self.one_token_state = OneTokenState()
 		self.ball_sold_state = BallSoldState()
 		self.no_balls_state = NoBallsState()
+		self.surprise_win = SurpriseWin()
 	
 		self.__ball_count = ball_count
 		self.__current_state = self.no_token_state
@@ -105,6 +127,7 @@ class GiftBall:
 	
 	def release_ball(self):
 		if self.__ball_count > 0:
+			print("Voici une boule surprise !")
 			self.__ball_count -= 1
 	
 	def ball_count(self):
