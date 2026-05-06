@@ -1,38 +1,115 @@
 from enum import Enum, auto
+from abc import ABC, abstractmethod
+
+class State(ABC):
+
+	@abstractmethod
+	def insert_token(self, machine):
+		pass
+
+	@abstractmethod
+	def eject_token(self, machine):
+		pass
+		
+	@abstractmethod
+	def turn_crank(self, machine):
+		pass
+
+	@abstractmethod
+	def dispense(self, machine):
+		pass
+
+class NoTokenState(State):
+	def insert_token(self, machine):
+		machine.set_state(machine.one_token_state)
+	
+	def eject_token(self, machine):
+		pass
+
+	def turn_crank(self, machine):
+		pass
+
+	def dispense(self, machine):
+		pass
+
+class OneTokenState(State):
+	def insert_token(self, machine):
+		pass
+	
+	def eject_token(self, machine):
+		machine.set_state(machine.no_token_state)
+
+	def turn_crank(self, machine):
+		ball_machine.set_state(machine.ball_sold_state)
+		machine.dispense()
+
+	def dispense(self, machine):
+		pass
+
+class BallSoldState(State):
+	def insert_token(self, machine):
+		pass
+	
+	def eject_token(self, machine):
+		pass
+
+	def turn_crank(self, machine):
+		pass
+
+	def dispense(self, machine):
+		print("Voici une boule surprise !")
+		machine.release_ball()
+		if machine.ball_count() == 0:
+			print("Plus de boules.")
+			machine
+		else:
+			machine.set_state(machine.no_token_state)
+
+class NoBallsState(State):
+	def insert_token(self, machine):
+		pass
+	
+	def eject_token(self, machine):
+		pass
+
+	def turn_crank(self, machine):
+		pass
+
+	def dispense(self, machine):
+		pass
 
 class GiftBall:
 	def __init__(self, ball_count):
-		self.current_state = State.NO_TOKEN
+		self.no_token_state = NoTokenState()
+		self.one_token_state = OneTokenState()
+		self.ball_sold_state = BallSoldState()
+		self.no_balls_state = NoBallsState()
+	
 		self.__ball_count = ball_count
+		self.__current_state = self.no_token_state
 
 	def insert_token(self):
-		if self.current_state == State.NO_TOKEN:
-			self.current_state = State.ONE_TOKEN
-	
-	def eject_token(self):
-		if self.current_state == State.ONE_TOKEN:
-			self.current_state = State.NO_TOKEN
-	
-	def turn_crank(self):
-		if self.current_state == State.ONE_TOKEN:
-			self.current_state = State.BALL_SOLD
-			self.dispense()
-	
-	def dispense(self):
-		if self.current_state == State.BALL_SOLD:
-			print("Voici une boule surprise !")
-			self.__ball_count -= 1
-			if self.__ball_count == 0:
-				print("Plus de boules.")
-				self.current_state = State.NO_BALLS
-			else:
-				self.current_state = State.NO_TOKEN
+		self.__current_state.insert_token(self)
 
-class State(Enum):
-	NO_TOKEN = auto()
-	ONE_TOKEN = auto()
-	BALL_SOLD = auto()
-	NO_BALLS = auto()
+	def eject_token(self):
+		self.__current_state.eject_token(self)
+
+	def turn_crank(self):
+		self.__current_state.turn_crank(self)
+
+	def dispense(self):
+		self.__current_state.dispense(self)
+
+	def set_state(self, state):
+		self.__current_state = state
+	
+	def release_ball(self):
+		if self.__ball_count > 0:
+			self.__ball_count -= 1
+	
+	def ball_count(self):
+		return self.__ball_count
+
 
 if __name__ == '__main__':
 	ball_machine = GiftBall(5)
